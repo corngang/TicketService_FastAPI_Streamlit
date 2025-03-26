@@ -22,10 +22,6 @@ jobs:
           git config --global user.email "wishcome@gmail.com"
           git config --global user.name "grayscaler"
 
-          git remote add secondary https://github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
-
-          git config --global credential.helper store
-          echo "https://${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
 
           # .github 및 manifests 디렉토리 무시 설정
           git update-index --assume-unchanged .github/
@@ -38,9 +34,10 @@ jobs:
           
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
+
+          git remote set-url origin https://github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
+          git push https://${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git main
           
-          # Push to secondary repository
-          git push secondary main
 
           git update-index --no-assume-unchanged .github/
           git update-index --no-assume-unchanged manifests/
