@@ -24,6 +24,9 @@ jobs:
 
           git remote add secondary https://github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
 
+          git config --global credential.helper store
+          echo "https://${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
+
           # .github 및 manifests 디렉토리 무시 설정
           git update-index --assume-unchanged .github/
           git update-index --assume-unchanged manifests/
