@@ -35,8 +35,8 @@ jobs:
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
 
-          git remote set-url origin https://${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
-          git push https://${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git main
+          git remote set-url origin https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
+          git push https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git main
           
 
           git update-index --no-assume-unchanged .github/
