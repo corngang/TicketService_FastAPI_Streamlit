@@ -8,7 +8,7 @@ git update-index --assume-unchanged manifests/
 git add --all
 git reset .github/
 git reset manifests/
-git commit -m "Update files excluding .github and manifests"
+git commit -m "Update files excluding .github and manifests" || echo "No changes to commit"
 
 # secondary에 푸시
 git push secondary main
