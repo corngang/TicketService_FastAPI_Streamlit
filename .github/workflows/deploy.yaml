@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write   # 또는 read
+  actions: write
+
 jobs:
   deploy:
     name: Build, Push Docker Images & Deploy via ArgoCD
