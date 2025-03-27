@@ -28,27 +28,17 @@ jobs:
           git config --global user.email "wishcome@gmail.com"
           git config --global user.name "grayscaler"
 
-
-          # .github 및 manifests 디렉토리 무시 설정
-          git update-index --assume-unchanged .github/
-          git update-index --assume-unchanged manifests/
           
           # Add all changes except .github and manifests folder
           git add --all
-          git reset .github
-          git reset manifests
           
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
 
           git remote add secondary https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
-          git remote -v
-          git pull --rebase secondary main
-          git push secondary main
+          git fetch secondary
+          git push secondary main --force
           
-
-          git update-index --no-assume-unchanged .github/
-          git update-index --no-assume-unchanged manifests/
 
           git remote remove secondary
 
