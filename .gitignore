@@ -1,0 +1,4 @@
+__pyache__
+*.pyc
+.gitignore
+*_copy.py

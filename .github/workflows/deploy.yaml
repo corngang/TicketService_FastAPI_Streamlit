@@ -1,0 +1,179 @@
+name: Build and Deploy to EKS via ArgoCD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write   # 또는 read
+  actions: write
+
+jobs:
+  deploy:
+    name: Build, Push Docker Images & Deploy via ArgoCD
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MY_GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Commit changes to secondary repository
+        run: |
+          git config --global user.email "wishcome@gmail.com"
+          git config --global user.name "grayscaler"
+
+
+          # .github 및 manifests 디렉토리 무시 설정
+          git update-index --assume-unchanged .github/
+          git update-index --assume-unchanged manifests/
+          
+          # Add all changes except .github and manifests folder
+          git add --all
+          git reset .github
+          git reset manifests
+          
+          # Commit changes
+          git commit -m "Update images and other changes" || echo "No changes to commit"
+
+          git remote add secondary https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
+          git remote -v
+          git pull --rebase secondary main
+          git push secondary main
+          
+
+          git update-index --no-assume-unchanged .github/
+          git update-index --no-assume-unchanged manifests/
+
+          git remote remove secondary
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set timestamp
+        id: timestamp
+        run: |
+          timestamp=$(date +%Y%m%d%H%M%S)
+          echo "TIMESTAMP=$timestamp" >> $GITHUB_ENV
+          echo "::set-output name=TIMESTAMP::$timestamp"
+
+      - name: Build and Push Docker Images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          TAG: ${{ github.sha  }}-${{ env.TIMESTAMP  }}
+        run: |
+          declare -A services
+          services=(
+          ["fastapi/login_api"]="login-api"
+            ["fastapi/reserve_api"]="reserve-api"
+            ["fastapi/user_api"]="user-api"
+            ["streamlit_front"]="streamlit-front"
+          )
+
+          for dir in "${!services[@]}"; do
+            IMAGE_NAME=${services[$dir]}
+            IMAGE_TAG="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_NAME-$TAG"
+
+            echo "Building and pushing $IMAGE_NAME"
+            docker build --no-cache -t $IMAGE_TAG $dir
+            docker push $IMAGE_TAG
+          done
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      - name: Fetch latest changes
+        run: |
+          git fetch origin main
+
+      - name: Update YAML with new image tag
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          TAG: ${{ github.sha }}-${{ env.TIMESTAMP }}
+        run: |
+          echo "Updating manifests with new image tags..."
+          echo "ECR_REGISTRY: $ECR_REGISTRY"
+          echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+          echo "TAG: $TAG"
+
+          yq eval -i ".spec.template.spec.containers[0].image = \"$ECR_REGISTRY/$ECR_REPOSITORY:login-api-$TAG\"" manifests/eks-login-deployment.yaml
+          yq eval -i ".spec.template.spec.containers[0].image = \"$ECR_REGISTRY/$ECR_REPOSITORY:reserve-api-$TAG\"" manifests/eks-reserve-deployment.yaml
+          yq eval -i ".spec.template.spec.containers[0].image = \"$ECR_REGISTRY/$ECR_REPOSITORY:user-api-$TAG\"" manifests/eks-user-deployment.yaml
+          yq eval -i ".spec.template.spec.containers[0].image = \"$ECR_REGISTRY/$ECR_REPOSITORY:streamlit-front-$TAG\"" manifests/eks-streamlit-deployment.yaml
+
+          cat manifests/eks-login-deployment.yaml
+          cat manifests/eks-reserve-deployment.yaml
+          cat manifests/eks-user-deployment.yaml
+          cat manifests/eks-streamlit-deployment.yaml
+
+      - name: Commit and Push Changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "wishcome@gmail.com"
+          git config --global user.name "grayscaler"
+          git add manifests/
+          git commit -m "Update image tags for deployment" || echo "No changes to commit"
+
+          git pull --rebase origin main
+          git push origin main || echo "No changes to push"
+
+      - name: Install ArgoCD CLI
+        run: |
+          curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x argocd-linux-amd64
+          sudo mv argocd-linux-amd64 /usr/local/bin/argocd
+
+      - name: Login to ArgoCD
+        run: |
+          argocd login ${{ secrets.ARGOCD_SERVER }} \
+            --username ${{ secrets.ARGOCD_USERNAME }} \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure
+
+      - name: Set up kubectl and configure EKS access
+        run: |
+          aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Ensure no ongoing sync
+        run: |
+          while argocd app get haoticket-app | grep -q "Sync: In Progress"; do
+            echo "Waiting for previous sync to complete..."
+            sleep 10
+          done
+          echo "No ongoing sync, proceeding with deployment."
+
+      - name: Sync ArgoCD Application
+        run: |
+          argocd app sync haoticket-app --force
+
+      - name: Wait for Deployment to Complete
+        run: |
+          argocd app wait haoticket-app
+
+      - name: Restart Kubernetes Deployment
+        run: |
+          kubectl rollout restart deployment login-api -n ${{ secrets.EKS_NAMESPACE }}
+          kubectl rollout restart deployment reserve-api -n ${{ secrets.EKS_NAMESPACE }}
+          kubectl rollout restart deployment user-api -n ${{ secrets.EKS_NAMESPACE }}
+          kubectl rollout restart deployment streamlit-front -n ${{ secrets.EKS_NAMESPACE }}
+
+########11
