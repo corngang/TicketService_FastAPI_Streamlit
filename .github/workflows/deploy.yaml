@@ -21,9 +21,9 @@ jobs:
         run: |
           git config --global user.email "wishcome@gmail.com"
           git config --global user.name "grayscaler"
-          curl -H "Authorization: token ${{ secrets.MY_GITHUB_TOKEN }}" \
+          curl -H "Authorization: token MY_GITHUB_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/corngang/TicketService_FastAPI_Streamlit_Secondary
+          https://api.github.com/user
 
 
 
