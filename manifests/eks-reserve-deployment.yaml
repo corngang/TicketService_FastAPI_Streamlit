@@ -10,41 +10,47 @@ spec:
   selector:
     matchLabels:
       app: eks-reserve
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
   template:
     metadata:
       labels:
         app: eks-reserve
     spec:
+      terminationGracePeriodSeconds: 10  # 빠른 종료
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
-                      - arm64
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
       containers:
-        - name: reserve
-          image: 225989344665.dkr.ecr.ap-northeast-2.amazonaws.com/hao/ticket_service:reserve-api-ba8e167ee686d8cb98e8ca2fcd49205b9c241478-20250327063138
-          ports:
-            - name: http
-              containerPort: 8000
-          env:
-            - name: DB_IP
-              value: "haoticketdbcluster.cluster-ro-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
-            - name: DB_USER
-              value: "worker_user"
-            - name: DB_PASSWD
-              value: "Dkagh1.!!"
-          imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              cpu: "250m" # 최소 CPU 요청 (250m = 0.25 vCPU)
-              memory: "512Mi" # 최소 메모리 요청
-            limits:
-              cpu: "1" # 최대 CPU 사용량 (1 vCPU)
-              memory: "1Gi" # 최대 메모리 사용량
+      - name: reserve
+        image: 225989344665.dkr.ecr.us-west-2.amazonaws.com/hao/ticket_service:reserve_auto_1
+        ports:
+        - name: http
+          containerPort: 8000
+        env:
+        - name: DB_IP
+          value: "haoticketdbcluster.cluster-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
+        - name: DB_USER
+          value: "worker_user"
+        - name: DB_PASSWD
+          value: "Dkagh1.!!"
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
       nodeSelector:
         kubernetes.io/os: linux

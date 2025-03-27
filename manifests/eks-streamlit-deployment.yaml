@@ -10,45 +10,51 @@ spec:
   selector:
     matchLabels:
       app: eks-streamlit
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1  
   template:
     metadata:
       labels:
         app: eks-streamlit
     spec:
+      terminationGracePeriodSeconds: 10  # 빠른 종료
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/arch
-                    operator: In
-                    values:
-                      - amd64
-                      - arm64
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
       containers:
-        - name: streamlit
-          image: 225989344665.dkr.ecr.ap-northeast-2.amazonaws.com/hao/ticket_service:streamlit-front-ba8e167ee686d8cb98e8ca2fcd49205b9c241478-20250327063138
-          ports:
-            - name: http
-              containerPort: 8501
-          env:
-            - name: LOGIN_URL
-              value: "http://login-service:8000/login"
-            - name: USER_URL
-              value: "http://user-service:8000/user"
-            - name: RESERVE_URL
-              value: "http://reserve-service:8000/reserve"
-            - name: VERIFY_URL
-              value: "http://reserve-service:8000/reserve/verify_user_info"
-            - name: TICKET_INFO_URL
-              value: "http://reserve-service:8000/reserve/ticket"
-          imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              cpu: "200m" # 최소 0.2 vCPU 사용
-              memory: "256Mi" # 최소 256MB RAM 사용
-            limits:
-              cpu: "500m" # 최대 0.5 vCPU 사용
-              memory: "512Mi" # 최대 512MB RAM 사용
+      - name: streamlit
+        image: 225989344665.dkr.ecr.us-west-2.amazonaws.com/hao/ticket_service:streamlit_auto_3
+        ports:
+        - name: http
+          containerPort: 8501
+        env:
+        - name: LOGIN_URL
+          value: "http://login-service:8000/login"
+        - name: USER_URL
+          value: "http://user-service:8000/user"
+        - name: RESERVE_URL
+          value: "http://reserve-service:8000/reserve"
+        - name: VERIFY_URL
+          value: "http://reserve-service:8000/reserve/verify_user_info"
+        - name: TICKET_INFO_URL
+          value: "http://reserve-service:8000/reserve/ticket"
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "200m"   # 최소 0.2 vCPU 사용
+            memory: "256Mi"  # 최소 256MB RAM 사용
+          limits:
+            cpu: "500m"   # 최대 0.5 vCPU 사용
+            memory: "512Mi"  # 최대 512MB RAM 사용
       nodeSelector:
         kubernetes.io/os: linux

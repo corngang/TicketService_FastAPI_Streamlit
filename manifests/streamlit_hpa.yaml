@@ -16,4 +16,19 @@ spec:
         name: cpu  # CPU 사용량을 기준으로 스케일링
         target:
           type: Utilization
-          averageUtilization: 50 # CPU 사용량이 50%를 초과하면 스케일HPA업
+          averageUtilization: 50 # CPU 사용량이 50%를 초과하면 스케일업
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0  # 스케일업 지연 시간 없애기
+      selectPolicy: Max  # 최대로 스케일업
+      policies:
+        - type: Percent
+          value: 100  # 100% 확장
+          periodSeconds: 30  # 30초 내에 스케일업 100%
+    scaleDown:
+      stabilizationWindowSeconds: 0  # 스케일다운 지연 시간 없애기
+      selectPolicy: Min  # 최소로 스케일다운
+      policies:
+        - type: Percent
+          value: 100  # 100% 축소
+          periodSeconds: 30  # 30초 내에 스케일다운 100%

@@ -23,3 +23,18 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70  # 메모리 사용량 70% 초과 시 스케일업
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0  # 스케일업 지연 시간 없애기
+      selectPolicy: Max  # 최대로 스케일업
+      policies:
+        - type: Percent
+          value: 100  # 100% 확장
+          periodSeconds: 30  # 30초 내에 스케일업 100%
+    scaleDown:
+      stabilizationWindowSeconds: 0  # 스케일다운 지연 시간 없애기
+      selectPolicy: Min  # 최소로 스케일다운
+      policies:
+        - type: Percent
+          value: 100  # 100% 축소
+          periodSeconds: 30  # 30초 내에 스케일다운 100%
