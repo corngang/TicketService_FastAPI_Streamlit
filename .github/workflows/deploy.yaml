@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     name: Build, Push Docker Images & Deploy via ArgoCD
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +35,7 @@ jobs:
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
 
+          git remote -v
           git remote add secondary https://${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
           git push secondary main
           
