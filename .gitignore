@@ -3,4 +3,3 @@ __pyache__
 .gitignore
 *_copy.py
 .github/
-manifests*/
