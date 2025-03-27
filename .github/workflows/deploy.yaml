@@ -41,8 +41,8 @@ jobs:
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
 
-          git remote -v
           git remote add secondary https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
+          git remote -v
           git push secondary main
           
 
