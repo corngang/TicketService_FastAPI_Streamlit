@@ -31,13 +31,14 @@ jobs:
           
           # Add all changes except .github and manifests folder
           git add --all
-          
+
           # Commit changes
           git commit -m "Update images and other changes" || echo "No changes to commit"
 
           git remote add secondary https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
-          git fetch secondary
-          git push secondary main --force
+          git fetch secondary main || echo "Secondary repo does not exist yet"
+          git rebase secondary/main || echo "No rebase needed"
+          git push --force secondary main
           
 
           git remote remove secondary
