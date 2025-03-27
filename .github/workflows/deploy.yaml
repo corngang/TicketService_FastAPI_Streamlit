@@ -43,7 +43,7 @@ jobs:
 
           git remote add secondary https://x-access-token:${{ secrets.MY_GITHUB_TOKEN }}@github.com/corngang/TicketService_FastAPI_Streamlit_Secondary.git
           git remote -v
-          git pull secondary main
+          git pull --rebase secondary main
           git push secondary main
           
 
