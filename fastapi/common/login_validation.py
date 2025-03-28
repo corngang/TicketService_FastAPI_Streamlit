@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 import re
 
 class LoginRequest(BaseModel):
-    username: str = Field(..., min_length=5, max_length=20)  # ID 길이 제한 (5~20자)
+    username: str = Field(..., min_length=5, max_length=50)  # ID 길이 제한 (5~20자)
     password: str = Field(..., min_length=8, max_length=30)  # 비밀번호 길이 제한 (8~30자)
 
 
