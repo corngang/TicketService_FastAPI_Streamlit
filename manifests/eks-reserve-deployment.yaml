@@ -20,37 +20,37 @@ spec:
       labels:
         app: eks-reserve
     spec:
-      terminationGracePeriodSeconds: 10  # 빠른 종료
+      terminationGracePeriodSeconds: 10 # 빠른 종료
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
-                - arm64
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
       containers:
-      - name: reserve
-        image: 225989344665.dkr.ecr.us-west-2.amazonaws.com/hao/ticket_service:reserve_auto_1
-        ports:
-        - name: http
-          containerPort: 8000
-        env:
-        - name: DB_IP
-          value: "haoticketdbcluster.cluster-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
-        - name: DB_USER
-          value: "worker_user"
-        - name: DB_PASSWD
-          value: "Dkagh1.!!"
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "512Mi"
-          limits:
-            cpu: "1"
-            memory: "1Gi"
+        - name: reserve
+          image: 225989344665.dkr.ecr.ap-northeast-2.amazonaws.com/hao/ticket_service:reserve-api-27f5c00feb4173cb14dcc74bcf63a8cefdcbf5a7-20250328062127
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DB_IP
+              value: "haoticketdbcluster.cluster-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
+            - name: DB_USER
+              value: "worker_user"
+            - name: DB_PASSWD
+              value: "Dkagh1.!!"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
       nodeSelector:
         kubernetes.io/os: linux

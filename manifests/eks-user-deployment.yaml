@@ -20,37 +20,37 @@ spec:
       labels:
         app: eks-user
     spec:
-      terminationGracePeriodSeconds: 10  # 빠른 종료
+      terminationGracePeriodSeconds: 10 # 빠른 종료
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
-                - arm64
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
       containers:
-      - name: user
-        image: 225989344665.dkr.ecr.us-west-2.amazonaws.com/hao/ticket_service:user_auto_1
-        ports:
-        - name: http
-          containerPort: 8000
-        env:
-        - name: DB_IP
-          value: "haoticketdbcluster.cluster-ro-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
-        - name: DB_USER
-          value: "worker_user"
-        - name: DB_PASSWD
-          value: "Dkagh1.!!"
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: "100m"  # 최소 CPU 요청 (100m = 0.1 vCPU)
-            memory: "128Mi"  # 최소 메모리 요청
-          limits:
-            cpu: "500m"  # 최대 CPU 사용량 (0.5 vCPU)
-            memory: "256Mi"  # 최대 메모리 사용량
+        - name: user
+          image: 225989344665.dkr.ecr.ap-northeast-2.amazonaws.com/hao/ticket_service:user-api-27f5c00feb4173cb14dcc74bcf63a8cefdcbf5a7-20250328062127
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DB_IP
+              value: "haoticketdbcluster.cluster-ro-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
+            - name: DB_USER
+              value: "worker_user"
+            - name: DB_PASSWD
+              value: "Dkagh1.!!"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "100m" # 최소 CPU 요청 (100m = 0.1 vCPU)
+              memory: "128Mi" # 최소 메모리 요청
+            limits:
+              cpu: "500m" # 최대 CPU 사용량 (0.5 vCPU)
+              memory: "256Mi" # 최대 메모리 사용량
       nodeSelector:
         kubernetes.io/os: linux
