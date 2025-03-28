@@ -39,7 +39,7 @@ spec:
               containerPort: 8000
           env:
             - name: DB_IP
-              value: "haoticketdbcluster.cluster-ro-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
+              value: "haoticketdbcluster.cluster-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
             - name: DB_USER
               value: "worker_user"
             - name: DB_PASSWD
