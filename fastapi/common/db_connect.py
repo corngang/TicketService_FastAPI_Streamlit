@@ -1,6 +1,12 @@
 import mysql.connector
 import configparser
 import os
+import redis
+import json
+import hashlib
+
+# Initialize Redis client (You must have redis installed. the port 6379 is the default redis port, db=0 uses the default database instance)
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 # config 파일에서 DB 정보 가져오기
 def get_db_config():
@@ -33,6 +39,31 @@ def connect_db():
 
 # SELECT 쿼리 실행 함수
 def select_query(query: str, data=None):
+    """
+    Execute a SELECT query with Redis caching.
+    
+    Args:
+        query: SQL query string
+        data: Parameters for parameterized query (optional)
+        cache_timeout: Time in seconds to cache results (default 1 hour)
+        
+    Returns:
+        Database results (from cache if available)
+    """
+    # Generate a unique cache key based on query and parameters
+    cache_key = hashlib.md5((query + str(data)).encode()).hexdigest()
+    
+    # Fetch data from cache if data in cache
+    try:
+        cached_result = redis_client.get(cache_key)
+        if cached_result:
+            cached_data = json.loads(cached_result)
+            # Retrieve data in the same format of a default MySQL cursor
+            return [tuple(row) for row in json.loads(cached_result)]
+    except redis.RedisError as e:
+        print(f"Redis cache access error: {e} - proceeding with DB query")
+    
+    # Fetch data from database if not data in cache
     conn = connect_db()  # DB 연결
     cursor = conn.cursor()  # 커서 생성
     result = None
