@@ -1,6 +1,0 @@
-fastapi==0.115.11
-uvicorn==0.34.0
-mysql-connector-python==9.2.0
-PyJWT==2.7.0
-cryptography==41.0.7
-prometheus_client==0.21.1

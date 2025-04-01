@@ -1,3 +1,0 @@
-streamlit-image-select==0.6.0
-streamlit==1.43.0
-prometheus_client==0.21.1
