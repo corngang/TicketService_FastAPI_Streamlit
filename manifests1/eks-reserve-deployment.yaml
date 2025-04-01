@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reserve-api
+  namespace: eks-app
+  labels:
+    app: eks-reserve
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eks-reserve
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: eks-reserve
+    spec:
+      terminationGracePeriodSeconds: 10 # 빠른 종료
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+                      - arm64
+      containers:
+        - name: reserve
+          image: 225989344665.dkr.ecr.us-west-2.amazonaws.com/hao/ticket_service:reserve-api-b732bae935edaac3b8f7eab2ea34658aa97d245a-20250328072820
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DB_IP
+              value: "haoticketdbcluster.cluster-czs4c6g4uy8h.us-west-2.rds.amazonaws.com"
+            - name: DB_USER
+              value: "worker_user"
+            - name: DB_PASSWD
+              value: "Dkagh1.!!"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      nodeSelector:
+        kubernetes.io/os: linux

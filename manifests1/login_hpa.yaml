@@ -1,0 +1,40 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: login-hpa
+  namespace: eks-app  # Deployment와 같은 네임스페이스로 수정
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: login-api
+  minReplicas: 3  # 최소 파드 수
+  maxReplicas: 15  # 최대 파드 수 (좀 더 빠르게 확장하도록 설정)
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60  # CPU 사용량 60% 초과 시 스케일업 (더 민감하게 설정)
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 55  # 메모리 사용량 55% 초과 시 스케일업
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0  # 스케일업 지연 시간 없애기
+      selectPolicy: Max  # 최대로 스케일업
+      policies:
+        - type: Percent
+          value: 100  # 100% 확장
+          periodSeconds: 30  # 30초 내에 스케일업 100%
+    scaleDown:
+      stabilizationWindowSeconds: 0  # 스케일다운 지연 시간 없애기
+      selectPolicy: Min  # 최소로 스케일다운
+      policies:
+        - type: Percent
+          value: 100  # 100% 축소
+          periodSeconds: 30  # 30초 내에 스케일다운 100%
